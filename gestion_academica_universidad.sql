@@ -147,3 +147,67 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2025-07-31 11:21:01
+
+# CONSULTAS BASICAS Y MANIPULACION
+
+-- Obtener el listado de todos los estudiantes junto con sus inscripciones y cursos (JOIN).
+SELECT 
+    e.nombre_completo AS nombre,
+    c.nombre AS curso,
+    i.fecha_inscripcion,
+    i.calificacion_final AS nota
+FROM Inscripciones i
+JOIN Estudiantes e ON i.id_estudiante = e.id_estudiante
+JOIN Cursos c ON i.id_curso = c.id_curso
+ORDER BY nombre ASC;
+
+-- Listar los cursos dictados por docentes con más de 5 años de experiencia.
+SELECT
+	d.nombre_completo AS docente,
+    c.nombre AS curso
+FROM Cursos c
+JOIN Docentes d ON c.id_docente = d.id_docente
+WHERE d.anios_experiencia >= 5;
+
+-- Obtener el promedio de calificaciones por curso (GROUP BY + AVG).
+SELECT 
+	c.nombre AS curso,
+    ROUND(AVG(i.calificacion_final)) AS nota_final
+FROM Cursos c
+JOIN Inscripciones i ON c.id_curso = i.id_curso
+GROUP BY c.nombre;
+
+-- Mostrar los estudiantes que están inscritos en más de un curso (HAVING COUNT(*) > 1).
+SELECT 
+    i.id_estudiante,
+    e.nombre_completo,
+    COUNT(*) AS cantidad_cursos
+FROM Inscripciones i
+JOIN Estudiantes e ON i.id_estudiante = e.id_estudiante
+GROUP BY i.id_estudiante, e.nombre_completo
+HAVING COUNT(*) > 1;
+
+-- Agregar una nueva columna estado_academico a la tabla estudiantes (ALTER TABLE).
+ALTER TABLE Estudiantes
+ADD COLUMN estado_academico VARCHAR(50) NOT NULL;
+
+-- Consultar los cursos en los que se han inscrito más de 2 estudiantes (GROUP BY + COUNT + HAVING).
+SELECT 
+	c.nombre AS curso,
+    COUNT(*) AS total_estudiantes
+FROM Cursos c
+JOIN Inscripciones i ON c.id_curso = i.id_curso
+GROUP BY c.nombre
+HAVING COUNT(*) > 2;
+
+# SUBCONSULTAS Y FUNCIONES
+
+-- Mostrar los nombres de las carreras con estudiantes inscritos en cursos del semestre 2 o posterior (IN o EXISTS).
+SELECT DISTINCT e.carrera
+FROM Estudiantes e
+WHERE e.id_estudiante IN (
+    SELECT i.id_estudiante
+    FROM Inscripciones i
+    JOIN Cursos c ON i.id_curso = c.id_curso
+    WHERE c.semestre >= 2
+);  
